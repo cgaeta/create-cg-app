@@ -3,71 +3,24 @@ import { resolve, join } from 'path';
 import { readdir, mkdir, writeFile, stat, copyFile, access } from 'fs/promises';
 import { fileURLToPath } from 'node:url';
 
+import {
+  getTemplates,
+  stackPrompt,
+  dirPrompt,
+  tsPrompt,
+  frontendPrompt,
+  backendPrompt,
+} from './prompts';
+
 const meme = async () => {
-  const [fe, be, full] = await Promise.all([
-    readdir(resolve(fileURLToPath(import.meta.url), '../templates/frontend')),
-    readdir(resolve(fileURLToPath(import.meta.url), '../templates/backend')),
-    readdir(resolve(fileURLToPath(import.meta.url), '../templates/fullstack')),
-  ]);
+  const [fe, be, full] = await getTemplates();
 
   const response = await prompts([
-    {
-      type: 'select',
-      name: 'stack',
-      message: 'App time! Watcha building?',
-      choices: [
-        { title: 'Fullstack', value: 'fullstack' },
-        { title: 'Frontend', value: 'frontend' },
-        { title: 'Backend', value: 'backend' },
-      ],
-    },
-    {
-      type: 'text',
-      name: 'dir',
-      message: 'Where we putting this bad boy?',
-      initial: 'cg_app',
-    },
-    {
-      type: 'confirm',
-      name: 'typescript',
-      message: 'Using Typescript, right?',
-      initial: true,
-    },
-    {
-      type: (_p, value) =>
-        ['frontend', 'fullstack'].includes(value.stack) ? 'select' : null,
-      name: 'client',
-      message: (prev, value) => {
-        return `${!prev ? 'Disagreed. ' : ''}What ${
-          value.stack === 'fullstack' ? 'frontend' : 'library'
-        }?`;
-      },
-      choices: (_p, value) => {
-        const templates = fe.concat(value.stack === 'fullstack' ? full : []);
-
-        return templates.map((t) => ({
-          value: t,
-          title: t,
-        }));
-      },
-    },
-    {
-      type: (_p, value) =>
-        ['backend', 'fullstack'].includes(value.stack) &&
-        !full.includes(value.client)
-          ? 'select'
-          : null,
-      name: 'server',
-      message: (_p, value) => {
-        return `${!value.typescript ? 'Disagreed. ' : ''}What ${
-          value.stack === 'fullstack' ? 'backend' : 'library'
-        }?`;
-      },
-      choices: be.map((t) => ({
-        value: t,
-        title: t,
-      })),
-    },
+    stackPrompt,
+    dirPrompt,
+    tsPrompt,
+    frontendPrompt(fe, full),
+    backendPrompt(be, full),
   ]);
 
   const cwd = process.cwd();

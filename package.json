@@ -5,13 +5,15 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "ts-node src/index.ts"
+    "test": "pnpm start -s fullstack -d test --ts -c react -b express",
+    "start": "ts-node src/index.ts",
+    "clean": "rm -rf test"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/minimist": "^1.2.2",
     "@types/prompts": "^2.4.4",
     "eslint": "^8.39.0",
     "prettier": "^2.8.8",
@@ -19,6 +21,7 @@
     "typescript": "^5.0.4"
   },
   "dependencies": {
+    "minimist": "^1.2.8",
     "prompts": "^2.4.2"
   }
 }

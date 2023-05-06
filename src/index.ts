@@ -1,4 +1,5 @@
 import prompts from 'prompts';
+import minimist from 'minimist';
 import { resolve, join } from 'path';
 import { readdir, mkdir, writeFile, stat, copyFile, access } from 'fs/promises';
 import { fileURLToPath } from 'node:url';
@@ -10,11 +11,23 @@ import {
   tsPrompt,
   frontendPrompt,
   backendPrompt,
-} from './prompts';
+} from './prompts.ts';
 
 const meme = async () => {
   const [fe, be, full] = await getTemplates();
 
+  const args = minimist(process.argv.slice(2), {
+    alias: {
+      s: 'stack',
+      d: 'dir',
+      ts: 'typescript',
+      c: 'client',
+      b: 'server',
+    },
+    boolean: 'typescript',
+  });
+
+  prompts.override(args);
   const response = await prompts([
     stackPrompt,
     dirPrompt,
@@ -27,7 +40,7 @@ const meme = async () => {
   const root = join(cwd, response.dir);
 
   try {
-    mkdir(root, { recursive: true });
+    await mkdir(root, { recursive: true });
   } catch (err) {
     throw Error('root dir alrady exists!');
   }

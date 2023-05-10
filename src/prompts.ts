@@ -2,20 +2,35 @@ import { readdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import type { PromptObject, Answers } from 'prompts';
+import type { PromptObject } from 'prompts';
+
+const TEMPLATE_PATH = resolve(fileURLToPath(import.meta.url), '../templates');
 
 export const getTemplates = () =>
   Promise.all([
-    readdir(resolve(fileURLToPath(import.meta.url), '../templates/frontend')),
-    readdir(resolve(fileURLToPath(import.meta.url), '../templates/backend')),
-    readdir(resolve(fileURLToPath(import.meta.url), '../templates/fullstack')),
+    readdir(resolve(TEMPLATE_PATH, 'frontend')),
+    readdir(resolve(TEMPLATE_PATH, 'backend')),
+    readdir(resolve(TEMPLATE_PATH, 'fullstack')),
+    readdir(resolve(TEMPLATE_PATH, 'bundler')),
   ]);
 
-type Prompts = 'stack' | 'dir' | 'typescript' | 'client' | 'server';
+const cliChoice = (choice: string) => ({
+  title: choice,
+  value: choice,
+});
 
-export const stackPrompt: PromptObject<Prompts> = {
+type PromptNames =
+  | 'appStack'
+  | 'dir'
+  | 'bundler'
+  | 'typescript'
+  | 'client'
+  | 'server';
+type Prompt = PromptObject<PromptNames>;
+
+export const stackPrompt: Prompt = {
   type: 'select',
-  name: 'stack',
+  name: 'appStack',
   message: 'App time! Watcha building?',
   choices: [
     { title: 'Fullstack', value: 'fullstack' },
@@ -24,54 +39,49 @@ export const stackPrompt: PromptObject<Prompts> = {
   ],
 };
 
-export const dirPrompt: PromptObject<Prompts> = {
+export const dirPrompt: Prompt = {
   type: 'text',
   name: 'dir',
   message: 'Where we putting this bad boy?',
   initial: 'cg_app',
 };
 
-export const tsPrompt: PromptObject<Prompts> = {
+export const bundlerPrompt = (bundlers: string[]): Prompt => ({
+  type: 'select',
+  name: 'bundler',
+  message: 'What bundler are we using?',
+  choices: bundlers.map(cliChoice),
+});
+
+export const tsPrompt: Prompt = {
   type: 'confirm',
   name: 'typescript',
   message: 'Using Typescript, right?',
   initial: true,
 };
 
-export const frontendPrompt = (
-  fe: string[],
-  full: string[]
-): PromptObject<Prompts> => ({
-  type: (_: unknown, value: Answers<Prompts>) =>
-    ['frontend', 'fullstack'].includes(value.stack) ? 'select' : null,
+export const frontendPrompt = (fe: string[], full: string[]): Prompt => ({
+  type: (_, value) =>
+    ['frontend', 'fullstack'].includes(value.appStack) ? 'select' : null,
   name: 'client',
-  message: (prev: boolean, value: Answers<Prompts>) =>
+  message: (prev, value) =>
     `${!prev ? 'Disagreed. ' : ''}What ${
-      value.stack === 'fullstack' ? 'frontend' : 'library'
+      value.appStack === 'fullstack' ? 'frontend' : 'library'
     }?`,
-  choices: (_: unknown, value: Answers<Prompts>) =>
-    fe.concat(value.stack === 'fullstack' ? full : []).map((t) => ({
-      value: t,
-      title: t,
-    })),
+  choices: (_, value) =>
+    fe.concat(value.appStack === 'fullstack' ? full : []).map(cliChoice),
 });
 
-export const backendPrompt = (
-  be: string[],
-  full: string[]
-): PromptObject<Prompts> => ({
-  type: (_: unknown, value: Answers<Prompts>) =>
-    ['backend', 'fullstack'].includes(value.stack) &&
+export const backendPrompt = (be: string[], full: string[]): Prompt => ({
+  type: (_, value) =>
+    ['backend', 'fullstack'].includes(value.appStack) &&
     !full.includes(value.client)
       ? 'select'
       : null,
   name: 'server',
-  message: (_: unknown, value: Answers<Prompts>) =>
+  message: (_, value) =>
     `${!value.typescript ? 'Disagreed. ' : ''}What ${
-      value.stack === 'fullstack' ? 'backend' : 'library'
+      value.appStack === 'fullstack' ? 'backend' : 'library'
     }?`,
-  choices: be.map((t) => ({
-    value: t,
-    title: t,
-  })),
+  choices: be.map(cliChoice),
 });

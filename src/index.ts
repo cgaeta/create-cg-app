@@ -1,7 +1,15 @@
 import prompts from 'prompts';
 import minimist from 'minimist';
 import { resolve, join } from 'path';
-import { readdir, mkdir, writeFile, stat, copyFile, access } from 'fs/promises';
+import {
+  readdir,
+  mkdir,
+  readFile,
+  writeFile,
+  stat,
+  copyFile,
+  access,
+} from 'fs/promises';
 import { fileURLToPath } from 'node:url';
 
 import {
@@ -9,20 +17,26 @@ import {
   stackPrompt,
   dirPrompt,
   tsPrompt,
+  bundlerPrompt,
   frontendPrompt,
   backendPrompt,
 } from './prompts.ts';
 
+const templatesDir = join(fileURLToPath(import.meta.url), '../templates');
+const getTemplate = (collection: string, target: string) =>
+  join(templatesDir, collection, target);
+
 const meme = async () => {
-  const [fe, be, full] = await getTemplates();
+  const [fe, be, full, bundler] = await getTemplates();
 
   const args = minimist(process.argv.slice(2), {
     alias: {
-      s: 'stack',
+      a: 'appStack',
       d: 'dir',
       ts: 'typescript',
       c: 'client',
-      b: 'server',
+      s: 'server',
+      b: 'bundler',
     },
     boolean: 'typescript',
   });
@@ -32,6 +46,7 @@ const meme = async () => {
     stackPrompt,
     dirPrompt,
     tsPrompt,
+    bundlerPrompt(bundler),
     frontendPrompt(fe, full),
     backendPrompt(be, full),
   ]);
@@ -52,6 +67,7 @@ const meme = async () => {
   ) => {
     const targetPath = join(targetDir, file);
     // writeFile(targetPath)
+    if (['package.json', 'node_modules'].includes(file)) return;
     await copy(join(templateDir, file), targetPath);
   };
 
@@ -69,59 +85,100 @@ const meme = async () => {
       await copy(srcFile, destFile);
     }
   };
+  const bundlerTemplateDir = getTemplate('bundler', response.bundler ?? '');
+  const bundlerFiles = response.bundler
+    ? await readdir(bundlerTemplateDir)
+    : [];
 
-  switch (response.stack) {
+  switch (response.appStack) {
     case 'fullstack':
-      const clientTemplateDir = join(
-        fileURLToPath(import.meta.url),
-        '../templates/frontend',
-        response.client
-      );
-      // console.log(join(root, 'client'));
+      const clientTemplateDir = getTemplate('frontend', response.client);
       await mkdir(join(root, 'client'));
       const clientFiles = await readdir(clientTemplateDir);
-      for (const file of clientFiles.filter(
-        (f) => f !== 'package.json' && f !== 'node_modules'
-      )) {
+      for (const file of clientFiles) {
         await write(clientTemplateDir, join(root, 'client'), file);
       }
 
-      const serverTemplateDir = join(
-        fileURLToPath(import.meta.url),
-        '../templates/backend',
-        response.server
+      const clientPkgFile = await readFile(
+        join(clientTemplateDir, 'package.json'),
+        'utf-8'
       );
+      const clientPkg = JSON.parse(clientPkgFile);
+
+      for (const file of bundlerFiles) {
+        await write(bundlerTemplateDir, join(root, 'client'), file);
+      }
+
+      const bundlerPkgFile = await readFile(
+        join(bundlerTemplateDir, 'package.json'),
+        'utf-8'
+      );
+      const bundlerPkg = JSON.parse(bundlerPkgFile);
+
+      const serverTemplateDir = getTemplate('backend', response.server);
       await mkdir(join(root, 'server'));
       const serverFiles = await readdir(serverTemplateDir);
-      for (const file of serverFiles.filter((f) => f !== 'package.json')) {
+      for (const file of serverFiles) {
         await write(serverTemplateDir, join(root, 'server'), file);
       }
 
+      const serverPgkFile = await readFile(
+        join(serverTemplateDir, 'package.json'),
+        'utf8'
+      );
+      const serverPkg = JSON.parse(serverPgkFile);
+
+      const combinedPkg = Object.assign({}, clientPkg, bundlerPkg, serverPkg, {
+        name: response.dir,
+        version: '0.0.0',
+        type: 'module',
+        scripts: Object.assign(
+          {},
+          clientPkg.scripts,
+          bundlerPkg.scripts,
+          serverPkg.scripts
+        ),
+        dependencies: Object.assign(
+          {},
+          clientPkg.dependencies,
+          bundlerPkg.dependencies,
+          serverPkg.dependencies
+        ),
+        devDependencies: Object.assign(
+          {},
+          clientPkg.devDependencies,
+          bundlerPkg.devDependencies,
+          serverPkg.devDependencies
+        ),
+      });
+      await writeFile(
+        join(root, 'package.json'),
+        JSON.stringify(combinedPkg, undefined, 2)
+      );
+      console.log(combinedPkg);
+
       break;
     case 'frontend':
-      const feTemplateDir = join(
-        fileURLToPath(import.meta.url),
-        '../templates/frontend',
-        response.client
-      );
+      const feTemplateDir = getTemplate('frontend', response.client);
       const feFiles = await readdir(feTemplateDir);
-      for (const file of feFiles.filter((f) => f !== 'package.json')) {
+      for (const file of feFiles) {
         await write(feTemplateDir, root, file);
       }
+
+      for (const file of bundlerFiles) {
+        await write(bundlerTemplateDir, root, file);
+      }
+
       break;
     case 'backend':
-      const beTemplateDir = join(
-        fileURLToPath(import.meta.url),
-        '../templates/frontend',
-        response.client
-      );
+      const beTemplateDir = getTemplate('backend', response.client);
       const beFiles = await readdir(beTemplateDir);
-      for (const file of beFiles.filter((f) => f !== 'package.json')) {
+      for (const file of beFiles) {
         await write(beTemplateDir, root, file);
       }
       break;
     default:
-      throw Error('invalid stack!');
+      throw Error('invalid appStack!');
   }
 
   console.log(process.env.npm_config_user_agent);

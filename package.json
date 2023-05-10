@@ -4,10 +4,11 @@
   "type": "module",
   "description": "",
   "main": "index.js",
+  "packageManager": "pnpm@8.2.0",
   "scripts": {
-    "test": "pnpm start -s fullstack -d test --ts -c react -b express",
+    "test": "pnpm clean && pnpm start -a fullstack -d test --ts -c react -s express -b vite",
     "start": "ts-node src/index.ts",
-    "clean": "rm -rf test"
+    "clean": "rm -rf test && pnpm i"
   },
   "keywords": [],
   "author": "",

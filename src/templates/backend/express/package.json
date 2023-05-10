@@ -6,7 +6,8 @@
   "entry": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "serve": "ts-node src/index.ts"
+    "serve": "ts-node src/index.ts",
+    "clean": "rm -rf node_modules"
   },
   "keywords": [],
   "author": "",

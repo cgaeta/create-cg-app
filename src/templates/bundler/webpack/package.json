@@ -5,7 +5,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "cross-env TS_NODE_PROJECT=\"webpack.tsconfig.json\" webpack",
-    "dev": "NODE_OPTIONS=\"--loader ts-node/esm\" webpack s -c client/webpack.config.ts"
+    "dev": "NODE_OPTIONS=\"--loader ts-node/esm\" webpack s -c client/webpack.config.ts",
+    "clean": "rm -rf node_modules"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.21.5",

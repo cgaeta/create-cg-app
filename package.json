@@ -10,6 +10,9 @@
     "start": "ts-node src/index.ts",
     "clean": "rm -rf test && pnpm i"
   },
+  "workspaces": [
+    "src/templates/*/*"
+  ],
   "keywords": [],
   "author": "",
   "license": "ISC",

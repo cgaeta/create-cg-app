@@ -1,21 +1,23 @@
 {
-  "name": "cg-react-template",
+  "name": "cg-fastify-template",
   "version": "1.0.0",
-  "type": "module",
   "description": "",
+  "type": "module",
+  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "serve": "ts-node index.ts",
     "clean": "rm -rf node_modules"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "fastify": "^4.17.0"
   },
   "devDependencies": {
-    "@types/react": "^18.2.5",
-    "@types/react-dom": "^18.2.4"
+    "@types/node": "^20.1.2",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.4"
   }
 }

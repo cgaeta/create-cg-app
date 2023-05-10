@@ -1,0 +1,14 @@
+{
+  "ts-node": {
+    "esm": true
+  },
+  "strict": true,
+  "compilerOptions": {
+    "module": "ES2022",
+    "target": "ES2022",
+    "moduleResolution": "bundler",
+    "skipLibCheck": true,
+    "noEmit": true,
+    "jsx": "react-jsx"
+  }
+}

@@ -1,18 +1,4 @@
-import { readdir } from 'node:fs/promises';
-import { resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
-
 import type { PromptObject } from 'prompts';
-
-const TEMPLATE_PATH = resolve(fileURLToPath(import.meta.url), '../templates');
-
-export const getTemplates = () =>
-  Promise.all([
-    readdir(resolve(TEMPLATE_PATH, 'frontend')),
-    readdir(resolve(TEMPLATE_PATH, 'backend')),
-    readdir(resolve(TEMPLATE_PATH, 'fullstack')),
-    readdir(resolve(TEMPLATE_PATH, 'bundler')),
-  ]);
 
 const cliChoice = (choice: string) => ({
   title: choice,

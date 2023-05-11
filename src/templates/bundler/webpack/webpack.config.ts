@@ -6,7 +6,7 @@ import type { Configuration } from 'webpack';
 
 const config: Configuration = {
   mode: 'development',
-  entry: resolve(fileURLToPath(import.meta.url), '../src/index.tsx'),
+  entry: resolve(fileURLToPath(import.meta.url), '../client/src/index.tsx'),
   output: {
     path: resolve(fileURLToPath(import.meta.url), 'dist'),
     filename: 'index.js',

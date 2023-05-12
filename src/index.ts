@@ -4,7 +4,7 @@ import { join } from 'path';
 import { mkdir } from 'fs/promises';
 
 import { getTemplates } from './templates';
-import { copyTemplate, getAndCombinePackages } from './files.ts';
+import { copyConfig, copyTemplate, getAndCombinePackages } from './files.ts';
 
 import {
   stackPrompt,
@@ -32,14 +32,21 @@ const meme = async () => {
   });
 
   prompts.override(args);
-  const response = await prompts([
-    stackPrompt,
-    dirPrompt,
-    tsPrompt,
-    bundlerPrompt(bundler),
-    frontendPrompt(fe, full),
-    backendPrompt(be, full),
-  ]);
+  const response = await prompts(
+    [
+      stackPrompt,
+      dirPrompt,
+      tsPrompt,
+      bundlerPrompt(bundler),
+      frontendPrompt(fe, full),
+      backendPrompt(be, full),
+    ],
+    {
+      onCancel: () => {
+        process.exit(1);
+      },
+    }
+  );
 
   const cwd = process.cwd();
   const root = join(cwd, response.dir);
@@ -62,7 +69,8 @@ const meme = async () => {
         response.dir,
         ['frontend', response.client],
         ['bundler', response.bundler],
-        ['backend', response.server]
+        ['backend', response.server],
+        ['config', `${response.client}_${response.bundler}`]
       );
 
       break;
@@ -72,7 +80,8 @@ const meme = async () => {
         root,
         response.dir,
         ['frontend', response.client],
-        ['backend', response.server]
+        ['backend', response.server],
+        ['config', `${response.client}_${response.bundler}`]
       );
 
       break;
@@ -89,6 +98,8 @@ const meme = async () => {
     default:
       throw Error('invalid appStack!');
   }
+
+  await copyConfig(root, response.client, response.bundler);
 
   console.log(process.env.npm_config_user_agent);
   console.log();

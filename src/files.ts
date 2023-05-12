@@ -7,7 +7,7 @@ import {
   readFile,
   writeFile,
 } from 'fs/promises';
-import { getTemplate, type TemplateGroups } from './templates';
+import { getConfig, getTemplate, type TemplateGroups } from './templates';
 
 import type { PackageJson } from 'type-fest';
 
@@ -54,6 +54,19 @@ export const copyTemplate = async (
   }
 };
 
+export const copyConfig = async (root: string, a: string, b: string) => {
+  const configDir = getConfig(a, b);
+  try {
+    const files = await readdir(configDir);
+    for (const file of files) {
+      await write(configDir, root, file);
+    }
+    return true;
+  } catch (_err) {
+    return false;
+  }
+};
+
 export const getPackageJson = async (dir: string) => {
   const path = join(dir, 'package.json');
   const file = await readFile(path, 'utf-8');
@@ -83,7 +96,7 @@ export const combinePackages = async (
 export const getAndCombinePackages = async (
   root: string,
   name: string,
-  ...pkgs: [TemplateGroups, string][]
+  ...pkgs: [TemplateGroups | 'config', string][]
 ) => {
   const packageFiles = Promise.all(
     pkgs.map(([g, t]) => getPackageJson(getTemplate(g, t)))

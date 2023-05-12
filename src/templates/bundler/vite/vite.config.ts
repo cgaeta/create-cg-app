@@ -1,11 +1,20 @@
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
 
-export default defineConfig((_) => {
-  return {
+const getReconfig = () => {
+  try {
+    return import('./reconfigVite.ts');
+  } catch (err) {
+    return null;
+  }
+};
+
+export default defineConfig(async (_) => {
+  const reconfig = (await getReconfig()).default;
+  const baseConfig = {
     root: join(fileURLToPath(import.meta.url), '..'),
-    plugins: [react()],
   };
+
+  return reconfig ? reconfig(baseConfig) : baseConfig;
 });

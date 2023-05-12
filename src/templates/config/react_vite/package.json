@@ -1,0 +1,12 @@
+{
+  "name": "cg_react_vite_config",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {},
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.0.0"
+  }
+}

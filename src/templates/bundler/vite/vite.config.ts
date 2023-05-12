@@ -4,6 +4,7 @@ import { defineConfig } from 'vite';
 
 const getReconfig = () => {
   try {
+    // @ts-ignore: might be added on scaffold
     return import('./reconfigVite.ts');
   } catch (err) {
     return null;

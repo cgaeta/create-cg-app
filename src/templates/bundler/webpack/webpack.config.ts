@@ -6,6 +6,7 @@ import type { Configuration } from 'webpack';
 
 const getReconfig = () => {
   try {
+    // @ts-ignore: might be added on scaffold
     return import('./reconfigWebpack');
   } catch (_) {
     return null;

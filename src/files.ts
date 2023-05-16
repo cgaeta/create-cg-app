@@ -7,7 +7,7 @@ import {
   readFile,
   writeFile,
 } from 'fs/promises';
-import { getConfig, getTemplate, type TemplateGroups } from './templates';
+import { getGlue, getTemplate, type TemplateGroups } from './templates';
 
 import type { PackageJson } from 'type-fest';
 
@@ -72,18 +72,18 @@ export const copyTemplate = async (
   }
 };
 
-export const copyConfig = async (
+export const copyGlue = async (
   root: string,
   a: string,
   b: string,
   target?: 'client' | 'server'
 ) => {
-  const configDir = getConfig(a, b);
+  const glueDir = getGlue(a, b);
   const targetDir = target ? join(root, target) : root;
   try {
-    const files = await readdir(configDir);
+    const files = await readdir(glueDir);
     for (const file of files) {
-      await write(configDir, targetDir, file);
+      await write(glueDir, targetDir, file);
     }
     return true;
   } catch (_err) {
@@ -120,7 +120,7 @@ export const combinePackages = async (
 export const getAndCombinePackages = async (
   root: string,
   name: string,
-  ...pkgs: [TemplateGroups | 'config', string][]
+  ...pkgs: [TemplateGroups | 'glue', string][]
 ) => {
   const packageFiles = Promise.all(
     pkgs.map(([g, t]) => getPackageJson(getTemplate(g, t)))

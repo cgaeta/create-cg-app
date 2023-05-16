@@ -6,7 +6,7 @@ const plugin = (app: Express) => {
   if (process.env.development) return;
 
   app.use(
-    staticMiddleware(join(fileURLToPath(import.meta.url), '../../../dist'))
+    staticMiddleware(join(fileURLToPath(import.meta.url), '../../../../dist'))
   );
 };
 

@@ -4,7 +4,7 @@ import { join } from 'path';
 import { mkdir } from 'fs/promises';
 
 import { type TemplateGroups, getTemplates } from './templates';
-import { copyConfig, copyTemplate, getAndCombinePackages } from './files.ts';
+import { copyGlue, copyTemplate, getAndCombinePackages } from './files.ts';
 
 import {
   stackPrompt,
@@ -76,10 +76,10 @@ const meme = async () => {
     case 'fullstack':
       await copyTemplate(root, 'frontend', response.client, 'client');
       await copyTemplate(root, 'backend', response.server, 'server');
-      await copyConfig(root, response.server, response.client, 'server');
+      await copyGlue(root, response.server, response.client, 'server');
       for (const l of arrayify(response.beLibraries)) {
         await copyTemplate(root, 'library/backend', l, 'server');
-        await copyConfig(root, response.server, l, 'server');
+        await copyGlue(root, response.server, l, 'server');
       }
 
       await getAndCombinePackages(
@@ -88,13 +88,12 @@ const meme = async () => {
         ['frontend', response.client],
         ['bundler', response.bundler],
         ['backend', response.server],
-        ['config', `${response.client}_${response.bundler}`],
-        ['config', `${response.server}_${response.client}`],
+        ['glue', `${response.client}/${response.bundler}`],
+        ['glue', `${response.server}/${response.client}`],
         ...arrayifyLibraries(response.feLibraries, 'library/frontend'),
         ...arrayifyLibraries(response.beLibraries, 'library/backend'),
         ...arrayify(response.beLibraries).map(
-          (l) =>
-            ['config', `${response.server}_${l}`] satisfies ['config', string]
+          (l) => ['glue', `${response.server}/${l}`] satisfies ['glue', string]
         )
       );
 
@@ -106,7 +105,7 @@ const meme = async () => {
         response.dir,
         ['frontend', response.client],
         ['backend', response.server],
-        ['config', `${response.client}_${response.bundler}`],
+        ['glue', `${response.client}/${response.bundler}`],
         ...arrayifyLibraries(response.feLibraries, 'library/frontend')
       );
 
@@ -126,7 +125,7 @@ const meme = async () => {
       throw Error('invalid appStack!');
   }
 
-  await copyConfig(root, response.client, response.bundler);
+  await copyGlue(root, response.client, response.bundler);
 
   console.log(process.env.npm_config_user_agent);
   console.log();

@@ -1,3 +1,4 @@
 packages:
   - 'src/templates/*/*'
+  - 'src/templates/glue/*/*'
   - 'test'

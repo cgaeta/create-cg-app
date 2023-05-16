@@ -11,6 +11,10 @@ import { getConfig, getTemplate, type TemplateGroups } from './templates';
 
 import type { PackageJson } from 'type-fest';
 
+class FsError extends Error {
+  code?: string;
+}
+
 export const write = async (
   templateDir: string,
   targetDir: string,
@@ -18,7 +22,12 @@ export const write = async (
 ) => {
   const targetPath = join(targetDir, file);
   // writeFile(targetPath)
-  if (['package.json', 'node_modules'].includes(file)) return;
+  if (
+    ['package.json', 'node_modules'].includes(file) ||
+    file.endsWith('.d.ts') ||
+    file.endsWith('.d.tsx')
+  )
+    return;
   await copy(join(templateDir, file), targetPath);
 };
 
@@ -31,6 +40,9 @@ export const copy = async (src: string, dest: string) => {
 export const copyDir = async (srcDir: string, destDir: string) => {
   await mkdir(destDir, { recursive: true });
   for (const file of await readdir(srcDir)) {
+    if (file.endsWith('.d.ts') || file.endsWith('.d.tsx')) {
+      continue;
+    }
     const srcFile = join(srcDir, file);
     const destFile = join(destDir, file);
     await copy(srcFile, destFile);
@@ -46,7 +58,13 @@ export const copyTemplate = async (
   const templateDir = getTemplate(group, template);
   const targetDir = target ? join(root, target) : root;
   if (target) {
-    await mkdir(join(root, target));
+    try {
+      await mkdir(join(root, target));
+    } catch (err) {
+      if (err instanceof FsError && err.code !== 'EEXIST') {
+        console.log({ err });
+      }
+    }
   }
   const files = await readdir(templateDir);
   for (const file of files) {
@@ -54,12 +72,18 @@ export const copyTemplate = async (
   }
 };
 
-export const copyConfig = async (root: string, a: string, b: string) => {
+export const copyConfig = async (
+  root: string,
+  a: string,
+  b: string,
+  target?: 'client' | 'server'
+) => {
   const configDir = getConfig(a, b);
+  const targetDir = target ? join(root, target) : root;
   try {
     const files = await readdir(configDir);
     for (const file of files) {
-      await write(configDir, root, file);
+      await write(configDir, targetDir, file);
     }
     return true;
   } catch (_err) {
@@ -90,7 +114,7 @@ export const combinePackages = async (
     join(root, 'package.json'),
     JSON.stringify(pkg, undefined, 2)
   );
-  console.log(pkg);
+  // console.log(pkg);
 };
 
 export const getAndCombinePackages = async (

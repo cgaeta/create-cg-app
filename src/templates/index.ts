@@ -2,7 +2,14 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readdir } from 'fs/promises';
 
-const templateGroups = ['frontend', 'backend', 'fullstack', 'bundler'] as const;
+const templateGroups = [
+  'frontend',
+  'backend',
+  'fullstack',
+  'bundler',
+  'library/frontend',
+  'library/backend',
+] as const;
 export type TemplateGroups = (typeof templateGroups)[number];
 
 export const TEMPLATE_PATH = join(fileURLToPath(import.meta.url), '..');

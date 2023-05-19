@@ -10,17 +10,16 @@ const templateGroups = [
   'library/frontend',
   'library/backend',
 ] as const;
-export type TemplateGroups = (typeof templateGroups)[number];
+export type TemplateGroups = (typeof templateGroups)[number] | 'glue';
+
+export const isTemplateGroup = (s: string): s is TemplateGroups =>
+  Array.from(Object(templateGroups).values()).includes(s) || s === 'glue';
 
 export const TEMPLATE_PATH = join(fileURLToPath(import.meta.url), '..');
 
-export const getTemplate = (
-  collection: TemplateGroups | 'glue',
-  target: string
-) => join(TEMPLATE_PATH, collection, target);
+/** Append the path to a library to the base template path */
+export const getTemplate = (collection: TemplateGroups, target: string) =>
+  join(TEMPLATE_PATH, collection, target);
 
 export const getTemplates = () =>
   Promise.all(templateGroups.map((t) => readdir(join(TEMPLATE_PATH, t))));
-
-export const getGlue = (a: string, b: string) =>
-  join(TEMPLATE_PATH, 'glue', `${a}/${b}`);

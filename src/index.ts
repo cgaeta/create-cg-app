@@ -1,32 +1,10 @@
 import prompts from 'prompts';
 import minimist from 'minimist';
-import { join } from 'path';
-import { mkdir } from 'fs/promises';
 
-import { type TemplateGroups, getTemplates } from './templates';
-import { copyGlue, copyTemplate, getAndCombinePackages } from './files.ts';
-
-import {
-  stackPrompt,
-  dirPrompt,
-  tsPrompt,
-  bundlerPrompt,
-  frontendPrompt,
-  backendPrompt,
-  frontendLibrariesPrompt,
-  backendLibrariesPrompt,
-} from './prompts.ts';
-
-const arrayify = (as: string | string[]) => (Array.isArray(as) ? as : [as]);
-
-const arrayifyLibraries = (
-  l: string | string[],
-  t: 'library/frontend' | 'library/backend'
-) => arrayify(l).map((l) => [t, l] satisfies [TemplateGroups, string]);
+import { promptList, promptConfig, Responses } from './prompts.ts';
+import { makeMeme } from './project.ts';
 
 const meme = async () => {
-  const [fe, be, full, bundler, clientLib, serverLib] = await getTemplates();
-
   const args = minimist(process.argv.slice(2), {
     alias: {
       a: 'appStack',
@@ -43,89 +21,42 @@ const meme = async () => {
   });
 
   prompts.override(args);
-  const response = await prompts(
-    [
-      stackPrompt,
-      dirPrompt,
-      tsPrompt,
-      bundlerPrompt(bundler),
-      frontendPrompt(fe, full),
-      backendPrompt(be, full),
-      frontendLibrariesPrompt(clientLib),
-      backendLibrariesPrompt(serverLib),
-    ],
-    {
-      onCancel: () => {
-        process.exit(1);
-      },
-    }
-  );
+  const response: Responses = await prompts(await promptList(), promptConfig);
+  const madeMeme = makeMeme(response);
 
-  const cwd = process.cwd();
-  const root = join(cwd, response.dir);
-
-  try {
-    await mkdir(root, { recursive: true });
-  } catch (err) {
-    throw Error('root dir alrady exists!');
-  }
-
-  await copyTemplate(root, 'bundler', response.bundler);
+  await madeMeme('bundler');
 
   switch (response.appStack) {
     case 'fullstack':
-      await copyTemplate(root, 'frontend', response.client, 'client');
-      await copyTemplate(root, 'backend', response.server, 'server');
-      await copyGlue(root, response.server, response.client, 'server');
-      for (const l of arrayify(response.beLibraries)) {
-        await copyTemplate(root, 'library/backend', l, 'server');
-        await copyGlue(root, response.server, l, 'server');
-      }
-
-      await getAndCombinePackages(
-        root,
-        response.dir,
-        ['frontend', response.client],
-        ['bundler', response.bundler],
-        ['backend', response.server],
-        ['glue', `${response.client}/${response.bundler}`],
-        ['glue', `${response.server}/${response.client}`],
-        ...arrayifyLibraries(response.feLibraries, 'library/frontend'),
-        ...arrayifyLibraries(response.beLibraries, 'library/backend'),
-        ...arrayify(response.beLibraries).map(
-          (l) => ['glue', `${response.server}/${l}`] satisfies ['glue', string]
-        )
-      );
+      await madeMeme.client('client');
+      await madeMeme.server('server');
+      await madeMeme.server('server', 'client');
+      await madeMeme('client', 'bundler');
+      await madeMeme.client('feLibraries');
+      await madeMeme.client('client', 'feLibraries');
+      await madeMeme.server('beLibraries');
+      await madeMeme.server('server', 'beLibraries');
+      await madeMeme.combinePackages();
 
       break;
     case 'frontend':
-      await copyTemplate(root, 'frontend', response.client);
-      await getAndCombinePackages(
-        root,
-        response.dir,
-        ['frontend', response.client],
-        ['backend', response.server],
-        ['glue', `${response.client}/${response.bundler}`],
-        ...arrayifyLibraries(response.feLibraries, 'library/frontend')
-      );
+      await madeMeme('client');
+      await madeMeme('client', 'bundler');
+      await madeMeme('feLibraries');
+      await madeMeme('client', 'feLibraries');
+      await madeMeme.combinePackages();
 
       break;
     case 'backend':
-      await copyTemplate(root, 'backend', response.server);
-      await getAndCombinePackages(
-        root,
-        response.dir,
-        ['backend', response.server],
-        ['bundler', response.bundler],
-        ...arrayifyLibraries(response.beLibraries, 'library/backend')
-      );
+      await madeMeme('server');
+      await madeMeme('beLibraries');
+      await madeMeme('server', 'beLibraries');
+      await madeMeme.combinePackages();
 
       break;
     default:
       throw Error('invalid appStack!');
   }
-
-  await copyGlue(root, response.client, response.bundler);
 
   console.log(process.env.npm_config_user_agent);
   console.log();

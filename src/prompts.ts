@@ -1,5 +1,7 @@
 import type { PromptObject, PromptType, PrevCaller } from 'prompts';
 
+import { getTemplates } from './templates';
+
 const cliChoice = (choice: string) => ({
   title: choice,
   value: choice,
@@ -95,3 +97,33 @@ export const backendLibrariesPrompt = (l: string[]): Prompt => ({
   message: 'Which libraries we using on the backend?',
   choices: l.map(cliChoice),
 });
+
+export type Responses = {
+  appStack: 'fullstack' | 'frontend' | 'backend';
+  dir: string;
+  bundler: string;
+  client: string;
+  server: string;
+  feLibraries: string | string[];
+  beLibraries: string | string[];
+};
+
+export const promptList = async () => {
+  const [fe, be, full, bundler, clientLib, serverLib] = await getTemplates();
+  return [
+    stackPrompt,
+    dirPrompt,
+    tsPrompt,
+    bundlerPrompt(bundler),
+    frontendPrompt(fe, full),
+    backendPrompt(be, full),
+    frontendLibrariesPrompt(clientLib),
+    backendLibrariesPrompt(serverLib),
+  ];
+};
+
+export const promptConfig = {
+  onCancel: () => {
+    process.exit(1);
+  },
+};

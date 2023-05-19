@@ -7,7 +7,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "serve": "ts-node src/index.ts",
-    "dev:server": "ts-node server/src/index.ts",
+    "dev:server": "pnpm build && ts-node server/src/index.ts",
     "clean": "rm -rf node_modules"
   },
   "keywords": [],

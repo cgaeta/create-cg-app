@@ -1,4 +1,4 @@
-import { join } from 'node:path';
+import { join, sep } from 'node:path';
 import {
   mkdir,
   readdir,
@@ -7,9 +7,9 @@ import {
   readFile,
   writeFile,
 } from 'fs/promises';
-import { getGlue, getTemplate, type TemplateGroups } from './templates';
-
 import type { PackageJson } from 'type-fest';
+
+import { getTemplate, type TemplateGroups } from './templates';
 
 class FsError extends Error {
   code?: string;
@@ -21,7 +21,6 @@ export const write = async (
   file: string
 ) => {
   const targetPath = join(targetDir, file);
-  // writeFile(targetPath)
   if (
     ['package.json', 'node_modules'].includes(file) ||
     file.endsWith('.d.ts') ||
@@ -52,42 +51,19 @@ export const copyDir = async (srcDir: string, destDir: string) => {
 export const copyTemplate = async (
   root: string,
   group: TemplateGroups,
-  template: string,
-  target?: 'client' | 'server'
+  template: string
 ) => {
   const templateDir = getTemplate(group, template);
-  const targetDir = target ? join(root, target) : root;
-  if (target) {
-    try {
-      await mkdir(join(root, target));
-    } catch (err) {
-      if (err instanceof FsError && err.code !== 'EEXIST') {
-        console.log({ err });
-      }
+  try {
+    await mkdir(join(root));
+  } catch (err) {
+    if (err instanceof FsError && err.code !== 'EEXIST') {
+      console.log({ err });
     }
   }
   const files = await readdir(templateDir);
   for (const file of files) {
-    await write(templateDir, targetDir, file);
-  }
-};
-
-export const copyGlue = async (
-  root: string,
-  a: string,
-  b: string,
-  target?: 'client' | 'server'
-) => {
-  const glueDir = getGlue(a, b);
-  const targetDir = target ? join(root, target) : root;
-  try {
-    const files = await readdir(glueDir);
-    for (const file of files) {
-      await write(glueDir, targetDir, file);
-    }
-    return true;
-  } catch (_err) {
-    return false;
+    await write(templateDir, root, file);
   }
 };
 
@@ -97,11 +73,8 @@ export const getPackageJson = async (dir: string) => {
   return JSON.parse(file) as PackageJson;
 };
 
-export const combinePackages = async (
-  root: string,
-  name: string,
-  ...pkgs: PackageJson[]
-) => {
+export const combinePackages = async (root: string, ...pkgs: PackageJson[]) => {
+  const name = root.split(sep).pop();
   const pkg = Object.assign({}, ...pkgs, {
     name,
     version: '0.0.0',
@@ -119,11 +92,8 @@ export const combinePackages = async (
 
 export const getAndCombinePackages = async (
   root: string,
-  name: string,
-  ...pkgs: [TemplateGroups | 'glue', string][]
+  ...pkgs: string[]
 ) => {
-  const packageFiles = Promise.all(
-    pkgs.map(([g, t]) => getPackageJson(getTemplate(g, t)))
-  );
-  combinePackages(root, name, ...(await packageFiles));
+  const packageFiles = Promise.all(pkgs.map(getPackageJson));
+  combinePackages(root, ...(await packageFiles));
 };

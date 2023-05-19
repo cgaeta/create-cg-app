@@ -12,7 +12,7 @@ const getReconfig = () => {
 };
 
 export default defineConfig(async (_) => {
-  const reconfig = (await getReconfig()).default;
+  const reconfig = ((await getReconfig()) ?? {}).default;
   const baseConfig = {
     root: join(fileURLToPath(import.meta.url), '..'),
   };

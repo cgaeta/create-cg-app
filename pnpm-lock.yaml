@@ -229,6 +229,8 @@ importers:
         specifier: ^9.1.2
         version: 9.1.2(@babel/core@7.21.8)(webpack@5.82.0)
 
+  src/templates/glue/react/zustand: {}
+
   src/templates/library/backend/trpc:
     dependencies:
       '@trpc/server':

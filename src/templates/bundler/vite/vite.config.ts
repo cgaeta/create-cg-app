@@ -15,6 +15,12 @@ export default defineConfig(async (_) => {
   const reconfig = ((await getReconfig()) ?? {}).default;
   const baseConfig = {
     root: join(fileURLToPath(import.meta.url), '..'),
+    resolve: {
+      alias: {
+        '@client': join(fileURLToPath(import.meta.url), '../client'),
+        '@server': join(fileURLToPath(import.meta.url), '../server'),
+      },
+    },
   };
 
   return reconfig ? reconfig(baseConfig) : baseConfig;

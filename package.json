@@ -7,7 +7,7 @@
   "packageManager": "pnpm@8.2.0",
   "scripts": {
     "start": "dist/index.js",
-    "test": "pnpm clean && pnpm dev -a fullstack -d test --ts -c react -s express -b vite --sl trpc --cl zustand && pnpm i",
+    "test": "pnpm clean && pnpm dev -a fullstack -d test --ts -c react -s express -b vite --sl trpc --cl trpc zustand && pnpm i",
     "dev": "ts-node-esm --experimental-specifier-resolution=node src/index.ts",
     "clean": "rm -rf test && pnpm i"
   },

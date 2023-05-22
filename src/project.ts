@@ -26,8 +26,10 @@ const otherMeme = async (res: Responses, root: string, k1: KR, k2?: KR) => {
     : [`${res[k1]}/${res[k2]}`];
 
   for (const l of last) {
-    await copyTemplate(root, template, l);
-    packagePaths.push(join(TEMPLATE_PATH, template, l));
+    try {
+      await copyTemplate(root, template, l);
+      packagePaths.push(join(TEMPLATE_PATH, template, l));
+    } catch (err) {}
   }
 };
 

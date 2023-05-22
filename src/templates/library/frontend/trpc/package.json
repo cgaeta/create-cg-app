@@ -1,5 +1,5 @@
 {
-  "name": "cg-trpc-template",
+  "name": "trpc",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -9,10 +9,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "devDependencies": {
-    "typescript": "^5.0.4"
-  },
   "dependencies": {
-    "@trpc/server": "^10.27.1"
+    "@trpc/client": "^10.27.1"
   }
 }

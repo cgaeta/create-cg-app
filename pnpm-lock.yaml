@@ -234,15 +234,30 @@ importers:
   src/templates/library/backend/trpc:
     dependencies:
       '@trpc/server':
-        specifier: ^10.26.0
-        version: 10.26.0
+        specifier: ^10.27.1
+        version: 10.27.1
     devDependencies:
       typescript:
         specifier: ^5.0.4
         version: 5.0.4
 
+  src/templates/library/frontend:
+    dependencies:
+      '@trpc/client':
+        specifier: ^10.27.1
+        version: 10.27.1(@trpc/server@10.27.1)
+
+  src/templates/library/frontend/trpc:
+    dependencies:
+      '@trpc/client':
+        specifier: ^10.27.1
+        version: 10.27.1(@trpc/server@10.27.1)
+
   test:
     dependencies:
+      '@trpc/client':
+        specifier: ^10.27.1
+        version: 10.27.1(@trpc/server@10.26.0)
       '@trpc/server':
         specifier: ^10.26.0
         version: 10.26.0
@@ -1930,8 +1945,28 @@ packages:
       fastq: 1.15.0
     dev: true
 
+  /@trpc/client@10.27.1(@trpc/server@10.26.0):
+    resolution: {integrity: sha512-e9Syj6F41OHDSUg3JvT67fgoD22UbxPzYgp9Bno13NFpyeJc6vkXRlAgDc8ZuouqUPQuouJWll/I90CsuxEqvA==}
+    peerDependencies:
+      '@trpc/server': 10.27.1
+    dependencies:
+      '@trpc/server': 10.26.0
+    dev: false
+
+  /@trpc/client@10.27.1(@trpc/server@10.27.1):
+    resolution: {integrity: sha512-e9Syj6F41OHDSUg3JvT67fgoD22UbxPzYgp9Bno13NFpyeJc6vkXRlAgDc8ZuouqUPQuouJWll/I90CsuxEqvA==}
+    peerDependencies:
+      '@trpc/server': 10.27.1
+    dependencies:
+      '@trpc/server': 10.27.1
+    dev: false
+
   /@trpc/server@10.26.0:
     resolution: {integrity: sha512-+Wt0NFAeflVSNiUnHIDNN3C8jP7XIRmYrcgJ6IsAnm0lK4p/FkpCpeu1aig5qxrgZx30PHNDLZ/3FttVSEW2aQ==}
+    dev: false
+
+  /@trpc/server@10.27.1:
+    resolution: {integrity: sha512-oMTNpei0+CAet0BuDdBE9cup0SseJAOlWRhWhcTAU05rETsJnzCA5DfNkf+aP3XiAM8rMJfrTfC0Z3aeADhHaA==}
     dev: false
 
   /@tsconfig/node10@1.0.9:

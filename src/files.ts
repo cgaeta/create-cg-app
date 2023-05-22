@@ -61,9 +61,17 @@ export const copyTemplate = async (
       console.log({ err });
     }
   }
-  const files = await readdir(templateDir);
-  for (const file of files) {
-    await write(templateDir, root, file);
+  try {
+    const files = await readdir(templateDir);
+    for (const file of files) {
+      await write(templateDir, root, file);
+    }
+  } catch (err) {
+    if (err instanceof FsError && err.code !== 'ENOENT') {
+      console.log({ err });
+    } else {
+      throw err;
+    }
   }
 };
 

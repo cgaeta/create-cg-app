@@ -41,6 +41,10 @@ const baseConfig: Configuration = {
   ],
   resolve: {
     extensions: ['.js', '.jsx', '.ts', '.tsx'],
+    alias: {
+      '@client': resolve(fileURLToPath(import.meta.url), '../client'),
+      '@server': resolve(fileURLToPath(import.meta.url), '../server'),
+    },
   },
 };
 

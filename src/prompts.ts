@@ -2,9 +2,12 @@ import type { PromptObject, PromptType, PrevCaller } from 'prompts';
 
 import { getTemplates } from './templates';
 
-const cliChoice = (choice: string) => ({
+type Maybe = (c: string) => boolean;
+const cliChoice = (choice: string, selected?: Maybe, disabled?: Maybe) => ({
   title: choice,
   value: choice,
+  selected: selected?.(choice),
+  disabled: disabled?.(choice),
 });
 
 type PromptNames =
@@ -53,7 +56,7 @@ export const bundlerPrompt = (bundlers: string[]): Prompt => ({
   type: 'select',
   name: 'bundler',
   message: 'What bundler are we using?',
-  choices: bundlers.map(cliChoice),
+  choices: bundlers.map((c) => cliChoice(c)),
 });
 
 export const tsPrompt: Prompt = {
@@ -66,36 +69,36 @@ export const tsPrompt: Prompt = {
 export const frontendPrompt = (fe: string[], full: string[]): Prompt => ({
   type: hasFrontend('select'),
   name: 'client',
-  message: (prev, value) =>
-    `${!prev ? 'Disagreed. ' : ''}What ${
-      value.appStack === 'fullstack' ? 'frontend' : 'library'
-    }?`,
-  choices: (_, value) =>
-    fe.concat(value.appStack === 'fullstack' ? full : []).map(cliChoice),
+  message: (_p, v) =>
+    `What ${v.appStack === 'fullstack' ? 'frontend' : 'library'}?`,
+  choices: (_, v) =>
+    fe.concat(v.appStack === 'fullstack' ? full : []).map((c) => cliChoice(c)),
 });
 
 export const backendPrompt = (be: string[], full: string[]): Prompt => ({
   type: hasBackend('select', full),
   name: 'server',
-  message: (_, v) =>
-    `${!(v.typescript || v.client) ? 'Disagreed. ' : ''}What ${
-      v.appStack === 'fullstack' ? 'backend' : 'library'
-    }?`,
-  choices: be.map(cliChoice),
+  message: (_p, v) =>
+    `What ${v.appStack === 'fullstack' ? 'backend' : 'library'}?`,
+  choices: (p) => be.map((c) => cliChoice(c, (c) => p.client === c)),
 });
 
 export const frontendLibrariesPrompt = (l: string[]): Prompt => ({
   type: hasFrontend('multiselect'),
   name: 'feLibraries',
   message: 'Which libraries we using on the frontend?',
-  choices: l.map(cliChoice),
+  choices: l.map((c) => cliChoice(c)),
 });
 
 export const backendLibrariesPrompt = (l: string[]): Prompt => ({
   type: hasBackend('multiselect'),
   name: 'beLibraries',
   message: 'Which libraries we using on the backend?',
-  choices: l.map(cliChoice),
+  choices: (p, v) =>
+    l.map((c) =>
+      cliChoice(c, undefined, (c) => v.appStack === 'fullstack' && c === p)
+    ),
+  initial: (p) => l.findIndex((c) => c === p),
 });
 
 export type Responses = {
@@ -123,7 +126,7 @@ export const promptList = async () => {
 };
 
 export const promptConfig = {
-  onCancel: () => {
-    process.exit(1);
-  },
+  onCancel: () => process.exit(1),
+  onSubmit: ({ name }: PromptObject, a: boolean) =>
+    name === 'typescript' && !a && console.log('Disagreed.'),
 };
